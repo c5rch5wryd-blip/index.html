@@ -1,0 +1,156 @@
+{
+  "totalResponses": 0,
+  "lastUpdate": "Nunca",
+  "questions": {
+    "q1": {
+      "title": "Principal Problema de Seguridad",
+      "responses": {
+        "Robo o asalto en la calle": 0,
+        "Narcotráfico / Crimen organizado": 0,
+        "Extorsión / Cobro de piso": 0,
+        "Robo a casa habitación": 0,
+        "custom": []
+      }
+    },
+    "q2": {
+      "title": "Momento del Día con Mayor Inseguridad",
+      "responses": {
+        "Por la mañana (camino al trabajo/escuela)": 0,
+        "A mediodía": 0,
+        "Por la tarde": 0,
+        "Por la noche o madrugada": 0,
+        "custom": []
+      }
+    },
+    "q3": {
+      "title": "Lugar Público con Mayor Desconfianza",
+      "responses": {
+        "El transporte público": 0,
+        "Los cajeros automáticos en la calle": 0,
+        "Parques y plazas públicas": 0,
+        "Carreteras y autopistas": 0,
+        "custom": []
+      }
+    },
+    "q4": {
+      "title": "Medidas de Seguridad Adoptadas",
+      "responses": {
+        "Cambiar rutas o horarios habituales": 0,
+        "Evitar salir de noche": 0,
+        "Dejar de usar joyas o artículos de valor": 0,
+        "Reforzar cerraduras o alarmas en casa": 0,
+        "custom": []
+      }
+    },
+    "q5": {
+      "title": "Medio de Información sobre Delitos",
+      "responses": {
+        "Redes sociales (WhatsApp, Facebook, X)": 0,
+        "Noticieros de televisión o radio": 0,
+        "Conversaciones con vecinos o familiares": 0,
+        "Periódicos o portales de noticias": 0,
+        "custom": []
+      }
+    },
+    "q6": {
+      "title": "Evaluación de Policía Municipal",
+      "responses": {
+        "Eficiente y confiable": 0,
+        "Presente pero poco efectiva": 0,
+        "Inexistente o ausente": 0,
+        "Corrupta o deshonesta": 0,
+        "custom": []
+      }
+    },
+    "q7": {
+      "title": "Razones para No Denunciar",
+      "responses": {
+        "Pérdida de tiempo / Trámites lentos": 0,
+        "Desconfianza en las autoridades": 0,
+        "Temor a represalias": 0,
+        "Falta de pruebas": 0,
+        "custom": []
+      }
+    },
+    "q8": {
+      "title": "Causa Principal de Delincuencia",
+      "responses": {
+        "Falta de oportunidades económicas y empleo": 0,
+        "Corrupción e impunidad de las autoridades": 0,
+        "Consumo y tráfico de drogas": 0,
+        "Desintegración familiar y falta de valores": 0,
+        "custom": []
+      }
+    },
+    "q9": {
+      "title": "Corporación de Seguridad Confiable",
+      "responses": {
+        "Ejército Mexicano / Marina": 0,
+        "Guardia Nacional": 0,
+        "Policía Estatal": 0,
+        "Policía Municipal": 0,
+        "custom": []
+      }
+    },
+    "q10": {
+      "title": "Sector Más Impactado",
+      "responses": {
+        "En el comercio y la economía local": 0,
+        "En la salud mental y estrés de la gente": 0,
+        "En la convivencia social y uso de espacios públicos": 0,
+        "En la educación y asistencia a escuelas": 0,
+        "custom": []
+      }
+    },
+    "q11": {
+      "title": "Solución Más Efectiva",
+      "responses": {
+        "Mejorar sueldos y capacitación de policías": 0,
+        "Generar más empleos y apoyos sociales": 0,
+        "Aplicar penas de cárcel más severas": 0,
+        "Combatir la corrupción en el gobierno": 0,
+        "custom": []
+      }
+    },
+    "q12": {
+      "title": "Evolución de Seguridad Futura",
+      "responses": {
+        "Va a mejorar notablemente": 0,
+        "Seguirá igual de estancada": 0,
+        "Va a empeorar un poco": 0,
+        "Va a empeorar gravemente": 0,
+        "custom": []
+      }
+    },
+    "q13": {
+      "title": "Herramienta Tecnológica de Protección",
+      "responses": {
+        "Cámaras de videovigilancia en casa": 0,
+        "Grupos vecinales de WhatsApp de alerta": 0,
+        "Aplicaciones de botón de pánico en el celular": 0,
+        "Alarmas vecinales sonoras": 0,
+        "custom": []
+      }
+    },
+    "q14": {
+      "title": "Delito en Aumento",
+      "responses": {
+        "Robo de autopartes o vehículos": 0,
+        "Asalto a transeúntes": 0,
+        "Venta de sustancias ilícitas": 0,
+        "Violencia doméstica o riñas": 0,
+        "custom": []
+      }
+    },
+    "q15": {
+      "title": "Responsabilidad de Resolver",
+      "responses": {
+        "El Gobierno Federal": 0,
+        "Los Gobiernos Estatales": 0,
+        "Los Gobiernos Municipales / Alcaldías": 0,
+        "La misma ciudadanía mediante la prevención": 0,
+        "custom": []
+      }
+    }
+  }
+}
