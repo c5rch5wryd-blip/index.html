@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario de Seguridad - Análisis en Tiempo Real</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .questionnaire-section,
+        .graphics-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .questionnaire-section {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .question-group {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .question-group:last-child {
+            border-bottom: none;
+        }
+
+        .question-number {
+            font-size: 0.9em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .question-title {
+            font-size: 1.1em;
+            color: #333;
+            margin: 10px 0 15px 0;
+            font-weight: 600;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .option:hover {
+            background-color: #f5f5f5;
+        }
+
+        .option input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            color: #555;
+        }
+
+        .custom-input {
+            margin-left: 30px;
+            margin-top: 8px;
+        }
+
+        .custom-input input {
+            width: 100%;
+            max-width: 400px;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+
+        .custom-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .custom-input .char-count {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .graphics-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 30px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .chart-title {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stats-summary {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .stats-summary h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95em;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .export-btn {
+            background: #4caf50;
+            padding: 10px 15px;
+            border-radius: 5px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .export-btn:hover {
+            background: #45a049;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .questionnaire-section {
+                max-height: none;
+            }
+        }
+
+        .success-message {
+            display: none;
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .error-message {
+            display: none;
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .progress-info {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        .config-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .config-label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Cuestionario de Seguridad</h1>
+            <p>Análisis en tiempo real de percepción de seguridad en la comunidad</p>
+        </div>
+
+        <div class="content">
+            <!-- SECCIÓN DE CUESTIONARIO -->
+            <div class="questionnaire-section scrollbar-thin">
+                <div class="config-section">
+                    <label class="config-label">⚙️ Configuración GitHub (obligatorio)</label>
+                    <input type="text" id="githubToken" class="config-input" placeholder="Token GitHub (ghp_...)" value="">
+                    <small style="color: #666;">Crear en: https://github.com/settings/tokens</small>
+                </div>
+
+                <div class="success-message" id="successMessage">
+                    ✓ Respuestas registradas correctamente. Los datos se han guardado en GitHub.
+                </div>
+
+                <div class="error-message" id="errorMessage">
+                    ✗ Error al guardar. Verifica tu token de GitHub.
+                </div>
+
+                <div class="question-progress">
+                    <span class="progress-info" id="progressText">0/15 preguntas</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <form id="surveyForm">
+                    <!-- Pregunta 1 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 1</div>
+                        <div class="question-title">¿Cuál considera que es el principal problema de seguridad en su comunidad?</div>
+                        <div class="option">
+                            <input type="radio" id="q1_1" name="q1" value="Robo o asalto en la calle" required>
+                            <label for="q1_1">Robo o asalto en la calle</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q1_2" name="q1" value="Narcotráfico / Crimen organizado">
+                            <label for="q1_2">Narcotráfico / Crimen organizado</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q1_3" name="q1" value="Extorsión / Cobro de piso">
+                            <label for="q1_3">Extorsión / Cobro de piso</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q1_4" name="q1" value="Robo a casa habitación">
+                            <label for="q1_4">Robo a casa habitación</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q1_5" name="q1" value="Otro">
+                            <label for="q1_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q1_custom" style="display: none;">
+                            <input type="text" name="q1_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q1_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 2 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 2</div>
+                        <div class="question-title">¿En qué momento del día se siente más inseguro?</div>
+                        <div class="option">
+                            <input type="radio" id="q2_1" name="q2" value="Por la mañana (camino al trabajo/escuela)" required>
+                            <label for="q2_1">Por la mañana (camino al trabajo/escuela)</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q2_2" name="q2" value="A mediodía">
+                            <label for="q2_2">A mediodía</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q2_3" name="q2" value="Por la tarde">
+                            <label for="q2_3">Por la tarde</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q2_4" name="q2" value="Por la noche o madrugada">
+                            <label for="q2_4">Por la noche o madrugada</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q2_5" name="q2" value="Otro">
+                            <label for="q2_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q2_custom" style="display: none;">
+                            <input type="text" name="q2_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q2_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 3 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 3</div>
+                        <div class="question-title">¿Qué lugar público le genera mayor desconfianza?</div>
+                        <div class="option">
+                            <input type="radio" id="q3_1" name="q3" value="El transporte público" required>
+                            <label for="q3_1">El transporte público</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q3_2" name="q3" value="Los cajeros automáticos en la calle">
+                            <label for="q3_2">Los cajeros automáticos en la calle</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q3_3" name="q3" value="Parques y plazas públicas">
+                            <label for="q3_3">Parques y plazas públicas</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q3_4" name="q3" value="Carreteras y autopistas">
+                            <label for="q3_4">Carreteras y autopistas</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q3_5" name="q3" value="Otro">
+                            <label for="q3_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q3_custom" style="display: none;">
+                            <input type="text" name="q3_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q3_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 4 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 4</div>
+                        <div class="question-title">¿Qué medida de seguridad ha tenido que adoptar en su día a día?</div>
+                        <div class="option">
+                            <input type="radio" id="q4_1" name="q4" value="Cambiar rutas o horarios habituales" required>
+                            <label for="q4_1">Cambiar rutas o horarios habituales</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q4_2" name="q4" value="Evitar salir de noche">
+                            <label for="q4_2">Evitar salir de noche</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q4_3" name="q4" value="Dejar de usar joyas o artículos de valor">
+                            <label for="q4_3">Dejar de usar joyas o artículos de valor</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q4_4" name="q4" value="Reforzar cerraduras o alarmas en casa">
+                            <label for="q4_4">Reforzar cerraduras o alarmas en casa</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q4_5" name="q4" value="Otro">
+                            <label for="q4_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q4_custom" style="display: none;">
+                            <input type="text" name="q4_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q4_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 5 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 5</div>
+                        <div class="question-title">¿A través de qué medio se entera principalmente de los delitos en su zona?</div>
+                        <div class="option">
+                            <input type="radio" id="q5_1" name="q5" value="Redes sociales (WhatsApp, Facebook, X)" required>
+                            <label for="q5_1">Redes sociales (WhatsApp, Facebook, X)</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q5_2" name="q5" value="Noticieros de televisión o radio">
+                            <label for="q5_2">Noticieros de televisión o radio</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q5_3" name="q5" value="Conversaciones con vecinos o familiares">
+                            <label for="q5_3">Conversaciones con vecinos o familiares</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q5_4" name="q5" value="Periódicos o portales de noticias">
+                            <label for="q5_4">Periódicos o portales de noticias</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q5_5" name="q5" value="Otro">
+                            <label for="q5_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q5_custom" style="display: none;">
+                            <input type="text" name="q5_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q5_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 6 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 6</div>
+                        <div class="question-title">¿Cómo califica el desempeño de la policía municipal en su localidad?</div>
+                        <div class="option">
+                            <input type="radio" id="q6_1" name="q6" value="Eficiente y confiable" required>
+                            <label for="q6_1">Eficiente y confiable</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q6_2" name="q6" value="Presente pero poco efectiva">
+                            <label for="q6_2">Presente pero poco efectiva</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q6_3" name="q6" value="Inexistente o ausente">
+                            <label for="q6_3">Inexistente o ausente</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q6_4" name="q6" value="Corrupta o deshonesta">
+                            <label for="q6_4">Corrupta o deshonesta</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q6_5" name="q6" value="Otro">
+                            <label for="q6_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q6_custom" style="display: none;">
+                            <input type="text" name="q6_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q6_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 7 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 7</div>
+                        <div class="question-title">Si fuera víctima de un delito menor, ¿por qué razón principal NO denunciaría?</div>
+                        <div class="option">
+                            <input type="radio" id="q7_1" name="q7" value="Pérdida de tiempo / Trámites lentos" required>
+                            <label for="q7_1">Pérdida de tiempo / Trámites lentos</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q7_2" name="q7" value="Desconfianza en las autoridades">
+                            <label for="q7_2">Desconfianza en las autoridades</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q7_3" name="q7" value="Temor a represalias">
+                            <label for="q7_3">Temor a represalias</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q7_4" name="q7" value="Falta de pruebas">
+                            <label for="q7_4">Falta de pruebas</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q7_5" name="q7" value="Otro">
+                            <label for="q7_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q7_custom" style="display: none;">
+                            <input type="text" name="q7_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q7_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 8 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 8</div>
+                        <div class="question-title">¿Cuál cree que es la principal causa de la delincuencia en el país?</div>
+                        <div class="option">
+                            <input type="radio" id="q8_1" name="q8" value="Falta de oportunidades económicas y empleo" required>
+                            <label for="q8_1">Falta de oportunidades económicas y empleo</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q8_2" name="q8" value="Corrupción e impunidad de las autoridades">
+                            <label for="q8_2">Corrupción e impunidad de las autoridades</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q8_3" name="q8" value="Consumo y tráfico de drogas">
+                            <label for="q8_3">Consumo y tráfico de drogas</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q8_4" name="q8" value="Desintegración familiar y falta de valores">
+                            <label for="q8_4">Desintegración familiar y falta de valores</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q8_5" name="q8" value="Otro">
+                            <label for="q8_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q8_custom" style="display: none;">
+                            <input type="text" name="q8_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q8_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 9 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 9</div>
+                        <div class="question-title">¿Qué corporación de seguridad le inspira mayor confianza?</div>
+                        <div class="option">
+                            <input type="radio" id="q9_1" name="q9" value="Ejército Mexicano / Marina" required>
+                            <label for="q9_1">Ejército Mexicano / Marina</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q9_2" name="q9" value="Guardia Nacional">
+                            <label for="q9_2">Guardia Nacional</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q9_3" name="q9" value="Policía Estatal">
+                            <label for="q9_3">Policía Estatal</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q9_4" name="q9" value="Policía Municipal">
+                            <label for="q9_4">Policía Municipal</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q9_5" name="q9" value="Otro">
+                            <label for="q9_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q9_custom" style="display: none;">
+                            <input type="text" name="q9_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q9_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 10 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 10</div>
+                        <div class="question-title">¿En qué sector considera que la inseguridad impacta más negativamente?</div>
+                        <div class="option">
+                            <input type="radio" id="q10_1" name="q10" value="En el comercio y la economía local" required>
+                            <label for="q10_1">En el comercio y la economía local</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q10_2" name="q10" value="En la salud mental y estrés de la gente">
+                            <label for="q10_2">En la salud mental y estrés de la gente</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q10_3" name="q10" value="En la convivencia social y uso de espacios públicos">
+                            <label for="q10_3">En la convivencia social y uso de espacios públicos</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q10_4" name="q10" value="En la educación y asistencia a escuelas">
+                            <label for="q10_4">En la educación y asistencia a escuelas</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q10_5" name="q10" value="Otro">
+                            <label for="q10_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q10_custom" style="display: none;">
+                            <input type="text" name="q10_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q10_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 11 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 11</div>
+                        <div class="question-title">¿Cuál cree que sería la solución más efectiva a largo plazo?</div>
+                        <div class="option">
+                            <input type="radio" id="q11_1" name="q11" value="Mejorar sueldos y capacitación de policías" required>
+                            <label for="q11_1">Mejorar sueldos y capacitación de policías</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q11_2" name="q11" value="Generar más empleos y apoyos sociales">
+                            <label for="q11_2">Generar más empleos y apoyos sociales</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q11_3" name="q11" value="Aplicar penas de cárcel más severas">
+                            <label for="q11_3">Aplicar penas de cárcel más severas</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q11_4" name="q11" value="Combatir la corrupción en el gobierno">
+                            <label for="q11_4">Combatir la corrupción en el gobierno</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q11_5" name="q11" value="Otro">
+                            <label for="q11_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q11_custom" style="display: none;">
+                            <input type="text" name="q11_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q11_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 12 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 12</div>
+                        <div class="question-title">¿Cómo cree que evolucionará la seguridad en México el próximo año?</div>
+                        <div class="option">
+                            <input type="radio" id="q12_1" name="q12" value="Va a mejorar notablemente" required>
+                            <label for="q12_1">Va a mejorar notablemente</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q12_2" name="q12" value="Seguirá igual de estancada">
+                            <label for="q12_2">Seguirá igual de estancada</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q12_3" name="q12" value="Va a empeorar un poco">
+                            <label for="q12_3">Va a empeorar un poco</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q12_4" name="q12" value="Va a empeorar gravemente">
+                            <label for="q12_4">Va a empeorar gravemente</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q12_5" name="q12" value="Otro">
+                            <label for="q12_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q12_custom" style="display: none;">
+                            <input type="text" name="q12_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q12_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 13 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 13</div>
+                        <div class="question-title">¿Qué herramienta tecnológica prefiere para protegerse?</div>
+                        <div class="option">
+                            <input type="radio" id="q13_1" name="q13" value="Cámaras de videovigilancia en casa" required>
+                            <label for="q13_1">Cámaras de videovigilancia en casa</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q13_2" name="q13" value="Grupos vecinales de WhatsApp de alerta">
+                            <label for="q13_2">Grupos vecinales de WhatsApp de alerta</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q13_3" name="q13" value="Aplicaciones de botón de pánico en el celular">
+                            <label for="q13_3">Aplicaciones de botón de pánico en el celular</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q13_4" name="q13" value="Alarmas vecinales sonoras">
+                            <label for="q13_4">Alarmas vecinales sonoras</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q13_5" name="q13" value="Otro">
+                            <label for="q13_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q13_custom" style="display: none;">
+                            <input type="text" name="q13_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q13_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 14 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 14</div>
+                        <div class="question-title">¿Qué tipo de delito ha escuchado que aumentó más en su colonia recientemente?</div>
+                        <div class="option">
+                            <input type="radio" id="q14_1" name="q14" value="Robo de autopartes o vehículos" required>
+                            <label for="q14_1">Robo de autopartes o vehículos</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q14_2" name="q14" value="Asalto a transeúntes">
+                            <label for="q14_2">Asalto a transeúntes</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q14_3" name="q14" value="Venta de sustancias ilícitas">
+                            <label for="q14_3">Venta de sustancias ilícitas</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q14_4" name="q14" value="Violencia doméstica o riñas">
+                            <label for="q14_4">Violencia doméstica o riñas</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q14_5" name="q14" value="Otro">
+                            <label for="q14_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q14_custom" style="display: none;">
+                            <input type="text" name="q14_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q14_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <!-- Pregunta 15 -->
+                    <div class="question-group">
+                        <div class="question-number">PREGUNTA 15</div>
+                        <div class="question-title">¿Quién considera que tiene la mayor responsabilidad de resolver este problema?</div>
+                        <div class="option">
+                            <input type="radio" id="q15_1" name="q15" value="El Gobierno Federal" required>
+                            <label for="q15_1">El Gobierno Federal</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q15_2" name="q15" value="Los Gobiernos Estatales">
+                            <label for="q15_2">Los Gobiernos Estatales</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q15_3" name="q15" value="Los Gobiernos Municipales / Alcaldías">
+                            <label for="q15_3">Los Gobiernos Municipales / Alcaldías</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q15_4" name="q15" value="La misma ciudadanía mediante la prevención">
+                            <label for="q15_4">La misma ciudadanía mediante la prevención</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="q15_5" name="q15" value="Otro">
+                            <label for="q15_5">Otro:</label>
+                        </div>
+                        <div class="custom-input" id="q15_custom" style="display: none;">
+                            <input type="text" name="q15_custom_text" maxlength="50" placeholder="Escriba su respuesta (máximo 50 caracteres)">
+                            <div class="char-count"><span id="q15_count">0</span>/50</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">📊 Enviar Respuestas y Actualizar Gráficas</button>
+                </form>
+            </div>
+
+            <!-- SECCIÓN DE GRÁFICAS -->
+            <div class="graphics-section scrollbar-thin">
+                <h2>📈 Resultados en Tiempo Real</h2>
+
+                <button class="export-btn" onclick="exportDataAsJSON()">📥 Descargar Datos (JSON)</button>
+                <button class="export-btn" onclick="exportDataAsCSV()" style="background: #2196F3;">📊 Descargar Datos (CSV)</button>
+
+                <div class="stats-summary">
+                    <h3>Estadísticas Generales</h3>
+                    <div class="stat-item">
+                        <span>Total de respuestas registradas:</span>
+                        <span class="stat-value" id="totalResponses">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Última actualización:</span>
+                        <span class="stat-value" id="lastUpdate">Nunca</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 1: Principal Problema de Seguridad</div>
+                    <canvas id="chart1"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 2: Momento del Día con Mayor Inseguridad</div>
+                    <canvas id="chart2"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 3: Lugar Público con Mayor Desconfianza</div>
+                    <canvas id="chart3"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 4: Medidas de Seguridad Adoptadas</div>
+                    <canvas id="chart4"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 5: Medio de Información sobre Delitos</div>
+                    <canvas id="chart5"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 6: Evaluación de Policía Municipal</div>
+                    <canvas id="chart6"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 7: Razones para No Denunciar</div>
+                    <canvas id="chart7"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 8: Causa Principal de Delincuencia</div>
+                    <canvas id="chart8"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 9: Corporación de Seguridad Confiable</div>
+                    <canvas id="chart9"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 10: Sector Más Impactado</div>
+                    <canvas id="chart10"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 11: Solución Más Efectiva</div>
+                    <canvas id="chart11"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 12: Evolución de Seguridad Futura</div>
+                    <canvas id="chart12"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 13: Herramienta Tecnológica de Protección</div>
+                    <canvas id="chart13"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 14: Delito en Aumento</div>
+                    <canvas id="chart14"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Pregunta 15: Responsabilidad de Resolver</div>
+                    <canvas id="chart15"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GITHUB_OWNER = 'c5rch5wryd-blip';
+        const GITHUB_REPO = 'index.html';
+        const DATA_FILE = 'surveyData.json';
+        const CHARTS_INSTANCES = {};
+
+        let surveyData = {};
+
+        const questions = [
+            {
+                id: 'q1',
+                title: 'Principal Problema de Seguridad',
+                options: ['Robo o asalto en la calle', 'Narcotráfico / Crimen organizado', 'Extorsión / Cobro de piso', 'Robo a casa habitación']
+            },
+            {
+                id: 'q2',
+                title: 'Momento del Día con Mayor Inseguridad',
+                options: ['Por la mañana (camino al trabajo/escuela)', 'A mediodía', 'Por la tarde', 'Por la noche o madrugada']
+            },
+            {
+                id: 'q3',
+                title: 'Lugar Público con Mayor Desconfianza',
+                options: ['El transporte público', 'Los cajeros automáticos en la calle', 'Parques y plazas públicas', 'Carreteras y autopistas']
+            },
+            {
+                id: 'q4',
+                title: 'Medidas de Seguridad Adoptadas',
+                options: ['Cambiar rutas o horarios habituales', 'Evitar salir de noche', 'Dejar de usar joyas o artículos de valor', 'Reforzar cerraduras o alarmas en casa']
+            },
+            {
+                id: 'q5',
+                title: 'Medio de Información sobre Delitos',
+                options: ['Redes sociales (WhatsApp, Facebook, X)', 'Noticieros de televisión o radio', 'Conversaciones con vecinos o familiares', 'Periódicos o portales de noticias']
+            },
+            {
+                id: 'q6',
+                title: 'Evaluación de Policía Municipal',
+                options: ['Eficiente y confiable', 'Presente pero poco efectiva', 'Inexistente o ausente', 'Corrupta o deshonesta']
+            },
+            {
+                id: 'q7',
+                title: 'Razones para No Denunciar',
+                options: ['Pérdida de tiempo / Trámites lentos', 'Desconfianza en las autoridades', 'Temor a represalias', 'Falta de pruebas']
+            },
+            {
+                id: 'q8',
+                title: 'Causa Principal de Delincuencia',
+                options: ['Falta de oportunidades económicas y empleo', 'Corrupción e impunidad de las autoridades', 'Consumo y tráfico de drogas', 'Desintegración familiar y falta de valores']
+            },
+            {
+                id: 'q9',
+                title: 'Corporación de Seguridad Confiable',
+                options: ['Ejército Mexicano / Marina', 'Guardia Nacional', 'Policía Estatal', 'Policía Municipal']
+            },
+            {
+                id: 'q10',
+                title: 'Sector Más Impactado',
+                options: ['En el comercio y la economía local', 'En la salud mental y estrés de la gente', 'En la convivencia social y uso de espacios públicos', 'En la educación y asistencia a escuelas']
+            },
+            {
+                id: 'q11',
+                title: 'Solución Más Efectiva',
+                options: ['Mejorar sueldos y capacitación de policías', 'Generar más empleos y apoyos sociales', 'Aplicar penas de cárcel más severas', 'Combatir la corrupción en el gobierno']
+            },
+            {
+                id: 'q12',
+                title: 'Evolución de Seguridad Futura',
+                options: ['Va a mejorar notablemente', 'Seguirá igual de estancada', 'Va a empeorar un poco', 'Va a empeorar gravemente']
+            },
+            {
+                id: 'q13',
+                title: 'Herramienta Tecnológica de Protección',
+                options: ['Cámaras de videovigilancia en casa', 'Grupos vecinales de WhatsApp de alerta', 'Aplicaciones de botón de pánico en el celular', 'Alarmas vecinales sonoras']
+            },
+            {
+                id: 'q14',
+                title: 'Delito en Aumento',
+                options: ['Robo de autopartes o vehículos', 'Asalto a transeúntes', 'Venta de sustancias ilícitas', 'Violencia doméstica o riñas']
+            },
+            {
+                id: 'q15',
+                title: 'Responsabilidad de Resolver',
+                options: ['El Gobierno Federal', 'Los Gobiernos Estatales', 'Los Gobiernos Municipales / Alcaldías', 'La misma ciudadanía mediante la prevención']
+            }
+        ];
+
+        const colors = {
+            primary: 'rgba(102, 126, 234, 0.7)',
+            primaryBorder: 'rgb(102, 126, 234)',
+            success: 'rgba(76, 175, 80, 0.7)',
+            successBorder: 'rgb(76, 175, 80)',
+            warning: 'rgba(255, 193, 7, 0.7)',
+            warningBorder: 'rgb(255, 193, 7)',
+            danger: 'rgba(244, 67, 54, 0.7)',
+            dangerBorder: 'rgb(244, 67, 54)',
+            info: 'rgba(33, 150, 243, 0.7)',
+            infoBorder: 'rgb(33, 150, 243)',
+            light: 'rgba(189, 189, 189, 0.7)',
+            lightBorder: 'rgb(189, 189, 189)'
+        };
+
+        // Cargar datos desde GitHub
+        async function loadDataFromGitHub() {
+            try {
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    surveyData = JSON.parse(atob(data.content));
+                    updateAllCharts();
+                    updateStats();
+                } else {
+                    console.error('Error al cargar datos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Guardar datos en GitHub
+        async function saveDataToGitHub(newData) {
+            const token = document.getElementById('githubToken').value;
+            
+            if (!token) {
+                showError('Token de GitHub es obligatorio');
+                return false;
+            }
+
+            try {
+                // Primero obtener el SHA del archivo actual
+                const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE}`, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (!getResponse.ok) {
+                    showError('Token inválido o acceso denegado');
+                    return false;
+                }
+
+                const fileData = await getResponse.json();
+                const sha = fileData.sha;
+
+                // Ahora actualizar el archivo
+                const putResponse = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_FILE}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Actualizar datos de encuesta - ${new Date().toLocaleString('es-MX')}`,
+                        content: btoa(JSON.stringify(newData, null, 2)),
+                        sha: sha
+                    })
+                });
+
+                if (putResponse.ok) {
+                    surveyData = newData;
+                    updateAllCharts();
+                    updateStats();
+                    showSuccess('Datos guardados exitosamente en GitHub');
+                    return true;
+                } else {
+                    showError('Error al guardar en GitHub');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error de conexión con GitHub');
+                return false;
+            }
+        }
+
+        function showSuccess(message) {
+            const msg = document.getElementById('successMessage');
+            msg.textContent = '✓ ' + message;
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 3000);
+        }
+
+        function showError(message) {
+            const msg = document.getElementById('errorMessage');
+            msg.textContent = '✗ ' + message;
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 3000);
+        }
+
+        // Evento del formulario
+        document.getElementById('surveyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Guardando...';
+
+            // Recopilar respuestas
+            const newData = JSON.parse(JSON.stringify(surveyData));
+            
+            questions.forEach(q => {
+                const selectedRadio = document.querySelector('input[name="' + q.id + '"]:checked');
+                if (selectedRadio) {
+                    let answer = selectedRadio.value;
+                    if (answer === 'Otro') {
+                        const customInput = document.querySelector('input[name="' + q.id + '_custom_text"]');
+                        if (customInput && customInput.value.trim()) {
+                            answer = customInput.value.trim();
+                            if (!newData.questions[q.id].responses.custom) {
+                                newData.questions[q.id].responses.custom = [];
+                            }
+                            newData.questions[q.id].responses.custom.push(answer);
+                        }
+                    }
+                    
+                    if (!newData.questions[q.id].responses[answer]) {
+                        newData.questions[q.id].responses[answer] = 0;
+                    }
+                    newData.questions[q.id].responses[answer]++;
+                }
+            });
+
+            newData.totalResponses++;
+            newData.lastUpdate = new Date().toLocaleString('es-MX');
+
+            // Guardar en GitHub
+            const success = await saveDataToGitHub(newData);
+
+            if (success) {
+                document.getElementById('surveyForm').reset();
+                document.querySelectorAll('.custom-input').forEach(div => {
+                    div.style.display = 'none';
+                });
+                updateProgress();
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📊 Enviar Respuestas y Actualizar Gráficas';
+        });
+
+        // Eventos para mostrar/ocultar inputs personalizados
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const questionId = this.name;
+                const customDiv = document.getElementById(questionId + '_custom');
+                
+                if (customDiv) {
+                    if (this.value === 'Otro') {
+                        customDiv.style.display = 'block';
+                    } else {
+                        customDiv.style.display = 'none';
+                    }
+                }
+                updateProgress();
+            });
+        });
+
+        // Contar caracteres
+        document.querySelectorAll('.custom-input input[type="text"]').forEach(input => {
+            const questionId = input.name.replace('_custom_text', '');
+            const countSpan = document.getElementById(questionId + '_count');
+            
+            input.addEventListener('input', function() {
+                if (countSpan) {
+                    countSpan.textContent = this.value.length;
+                }
+            });
+        });
+
+        function updateProgress() {
+            let answeredCount = 0;
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                if (radio.checked) {
+                    answeredCount++;
+                }
+            });
+            const progressPercentage = (answeredCount / 15) * 100;
+            document.getElementById('progressFill').style.width = progressPercentage + '%';
+            document.getElementById('progressText').textContent = answeredCount + '/15 preguntas';
+        }
+
+        function updateAllCharts() {
+            questions.forEach((q, index) => {
+                updateChart(q, index + 1);
+            });
+        }
+
+        function updateChart(question, questionNumber) {
+            const chartId = 'chart' + questionNumber;
+            const canvasElement = document.getElementById(chartId);
+            
+            if (!canvasElement) return;
+
+            const labels = [];
+            const data = [];
+            const backgroundColors = [];
+            const borderColors = [];
+
+            if (surveyData.questions && surveyData.questions[question.id]) {
+                const responses = surveyData.questions[question.id].responses;
+                
+                question.options.forEach((option, index) => {
+                    const colorIndex = index % 6;
+                    const colorKeys = ['primary', 'success', 'warning', 'danger', 'info', 'light'];
+                    labels.push(option);
+                    data.push(responses[option] || 0);
+                    backgroundColors.push(colors[colorKeys[colorIndex]]);
+                    borderColors.push(colors[colorKeys[colorIndex] + 'Border']);
+                });
+
+                if (responses.custom && responses.custom.length > 0) {
+                    responses.custom.forEach(response => {
+                        labels.push('Otro: ' + response.substring(0, 20) + (response.length > 20 ? '...' : ''));
+                        data.push(1);
+                        backgroundColors.push(colors.light);
+                        borderColors.push(colors.lightBorder);
+                    });
+                }
+            }
+
+            if (CHARTS_INSTANCES[chartId]) {
+                CHARTS_INSTANCES[chartId].destroy();
+            }
+
+            const ctx = canvasElement.getContext('2d');
+            CHARTS_INSTANCES[chartId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 12 },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + ' votos';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalResponses').textContent = surveyData.totalResponses || 0;
+            document.getElementById('lastUpdate').textContent = surveyData.lastUpdate || 'Nunca';
+        }
+
+        // Exportar como JSON
+        function exportDataAsJSON() {
+            const dataStr = JSON.stringify(surveyData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `surveyData_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        // Exportar como CSV
+        function exportDataAsCSV() {
+            let csv = 'Pregunta,Opción,Respuestas\n';
+            
+            questions.forEach(q => {
+                if (surveyData.questions && surveyData.questions[q.id]) {
+                    const responses = surveyData.questions[q.id].responses;
+                    q.options.forEach(option => {
+                        csv += `"${q.title}","${option}",${responses[option] || 0}\n`;
+                    });
+                    if (responses.custom && responses.custom.length > 0) {
+                        responses.custom.forEach(custom => {
+                            csv += `"${q.title}","Otro: ${custom}",1\n`;
+                        });
+                    }
+                }
+            });
+
+            const dataBlob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `surveyData_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // Inicializar
+        window.addEventListener('DOMContentLoaded', function() {
+            loadDataFromGitHub();
+        });
+    </script>
+</body>
+</html>
